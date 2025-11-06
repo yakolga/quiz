@@ -2,6 +2,8 @@
 
 This project is a quiz application designed to test knowledge on various topics. The application is structured to provide an engaging and interactive experience for users.
 
+## [Live Demo](https://yakolga.github.io/quiz/)
+
 ## Features
 
 - Multiple-choice questions
