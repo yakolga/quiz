@@ -1,8 +1,14 @@
-function Progress({index, numQuestions, points, maxPossiblePoints, answer}) {
+import { useQuiz } from "../contexts/QuizContext";
+
+function Progress() {
+    const {questions, index, points, answer} = useQuiz();
+      
+    const maxPossiblePoints = questions.reduce((prev, curr) => prev + curr.points, 0);
+
     return (
         <header className="progress">
-            <progress max={numQuestions} value={index + Number(answer !== null)}/>
-            <p>Question <strong>{index + 1}</strong> / {numQuestions}</p>
+            <progress max={questions.length} value={index + Number(answer !== null)}/>
+            <p>Question <strong>{index + 1}</strong> / {questions.length}</p>
             <p><strong>{points}</strong> / {maxPossiblePoints}</p>
         </header>
     )

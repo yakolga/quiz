@@ -1,6 +1,5 @@
 import Header from './components/Header';
 import Main from './components/Main';
-import { useEffect, useReducer } from 'react';
 import Loader from './components/Loader';
 import Error from './components/Error';
 import StartScreen from './components/StartScreen';
@@ -10,98 +9,28 @@ import Progress from './components/Progress';
 import Finish from './components/Finish';
 import Timer from './components/Timer';
 import Footer from './components/Footer';
-
-const SECS_PER_QUESTION = 30;
-
-const initialState = {
-  questions: [],
-  status: 'loading', // loading, error, ready, active, finished,
-  index: 0,
-  answer: null,
-  points: 0,
-  highscore: 0,
-  secondsRemaining: null,
-};
-
-function reducer(state, action) {
-  switch(action.type) {
-    case 'dataRecieved':
-      return {
-        ...state,
-        questions: action.payload,
-        status: 'ready',
-      };
-    case 'dataFailed':
-      return {
-        ...state,
-        status: 'error',
-      };
-    case 'dataActive': 
-      return {
-        ...state,
-        status: 'active',
-        secondsRemaining: state.questions.length * SECS_PER_QUESTION,
-      }
-    case 'newAnswer':
-      const question = state.questions[state.index];
-      return {
-        ...state,
-        answer: action.payload,
-        points: action.payload === question.correctOption ? state.points + question.points : state.points,
-      }
-    case 'nextQuestion': 
-      return {
-        ...state,
-        index: state.index + 1,
-        answer: null,
-      }
-    case 'finish': 
-      return {
-        ...state,
-        status: 'finished',
-        highscore: state.points > state.highscore ? state.points : state.highscore,
-      }
-    case 'restart': 
-      return {
-        ...state,
-        status: 'ready',
-        index: 0,
-        answer: null,
-        points: 0,
-      }
-    case 'tick':
-      return {
-        ...state,
-        secondsRemaining: state.secondsRemaining - 1,
-        status: state.secondsRemaining === 0 ? 'finished' : state.status,
-      }
-    default: 
-      throw new Error(`Unknown action`);
-  }
-}
+import { useQuiz } from './contexts/QuizContext';
 
 export default function App() {
-  const [{questions, status, index, answer, points, highscore, secondsRemaining}, dispatch] = useReducer(reducer, initialState);
-
-  useEffect(() => {
-    fetch('http://localhost:8000/questions')
-    .then((data) => data.json())
-    .then((data) => dispatch({type: 'dataRecieved', payload: data}))
-    .catch((err) => dispatch({type: 'dataFailed'}))
-  }, []);
-
-  const numQuestions = questions.length;
-  const maxPossiblePoints = questions.reduce((prev, curr) => prev + curr.points, 0);
-
+  const {status} = useQuiz();
+  
   return (
     <div className="app">
       <Header/>
       <Main>
         {status === 'loading' && <Loader/>}
         {status === 'error' && <Error/>}
-        {status === 'ready' && <StartScreen numQuestions={numQuestions} dispatch={dispatch}/>}
-        {status === 'active' && <><Progress index={index} numQuestions={questions.length} points={points} maxPossiblePoints={maxPossiblePoints} answer={answer}/><Question question={questions[index]} dispatch={dispatch} answer={answer}/><Footer><Timer dispatch={dispatch} secondsRemaining={secondsRemaining}/><NextButton dispatch={dispatch} answer={answer} numQuestions={numQuestions} index={index}/></Footer> </>}
-        {status === 'finished' && <Finish points={points} maxPossiblePoints={maxPossiblePoints} highscore={highscore} dispatch={dispatch}/>}
+        {status === 'ready' && <StartScreen/>}
+        {status === 'active' && 
+        <>
+          <Progress/>
+          <Question/>
+          <Footer>
+            <Timer/>
+            <NextButton/>
+          </Footer>
+        </>}
+        {status === 'finished' && <Finish/>}
       </Main>
     </div>
   )
